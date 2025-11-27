@@ -30,24 +30,4 @@ public class ApplicationServer {
             e.printStackTrace();
         }
     }
-    
-    // Método main para iniciar um servidor específico via argumentos
-    // Exemplo de execução: java server.ApplicationServer 9001
-    public static void main(String[] args) {
-        if (args.length < 1) {
-            System.out.println("Uso: java server.ApplicationServer <porta>");
-            return;
-        }
-        int porta = Integer.parseInt(args[0]);
-        
-        // Define quem são os vizinhos baseados nas portas fixas do projeto
-        List<Integer> vizinhos = new ArrayList<>();
-        int[] todasPortas = {9001, 9002, 9003};
-        
-        for (int p : todasPortas) {
-            if (p != porta) vizinhos.add(p);
-        }
-
-        new ApplicationServer(porta, vizinhos).start();
-    }
 }
