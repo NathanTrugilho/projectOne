@@ -11,7 +11,6 @@ public class Client implements Runnable { // Agora implementa Runnable
 
     @Override
     public void run() {
-        System.out.println("[Client] Iniciado. Conectando ao LoadBalancer na porta " + PORTA_LB);
         Random random = new Random();
 
         while (true) {

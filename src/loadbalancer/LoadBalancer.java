@@ -13,8 +13,6 @@ public class LoadBalancer implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("[LoadBalancer] Rodando na porta " + PORTA_LB);
-
         try (ServerSocket serverSocket = new ServerSocket(PORTA_LB)) {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -27,14 +25,10 @@ public class LoadBalancer implements Runnable {
     }
 
     private void handleClient(Socket clientSocket) {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
             String request = in.readLine();
             if (request == null) return;
-
-            // Log para debug (opcional)
-            // System.out.println("LB Recebeu: " + request);
 
             if (request.startsWith("ESCRITA")) {
                 // Sorteio aleatório para 1 servidor
