@@ -1,0 +1,66 @@
+package loadbalancer;
+
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Random;
+
+public class LoadBalancer {
+    // Porta onde o LoadBalancer escuta o Cliente
+    private static final int PORTA_LB = 8080;
+    // Portas dos 3 servidores de aplicação
+    private static final int[] SERVIDORES = {9001, 9002, 9003};
+
+    public static void main(String[] args) {
+        System.out.println("LoadBalancer rodando na porta " + PORTA_LB);
+        
+        try (ServerSocket serverSocket = new ServerSocket(PORTA_LB)) {
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                // Cria uma thread para não travar o LB enquanto repassa a mensagem
+                new Thread(() -> handleClient(clientSocket)).start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void handleClient(Socket clientSocket) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+
+            String request = in.readLine();
+            if (request == null) return;
+            
+            // Log para debug
+            System.out.println("LB Recebeu: " + request);
+
+            if (request.startsWith("ESCRITA")) {
+                // [cite: 11] Sorteio aleatório para 1 servidor
+                int index = new Random().nextInt(SERVIDORES.length);
+                int portaAlvo = SERVIDORES[index];
+                enviarParaServidor(portaAlvo, request);
+                System.out.println("Redirecionado ESCRITA para servidor na porta: " + portaAlvo);
+
+            } else if (request.startsWith("LEITURA")) {
+                // [cite: 12] Broadcast para todos os 3 servidores
+                for (int porta : SERVIDORES) {
+                    enviarParaServidor(porta, request);
+                }
+                System.out.println("Broadcast LEITURA realizado.");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void enviarParaServidor(int porta, String msg) {
+        try (Socket s = new Socket("localhost", porta);
+             PrintWriter pOut = new PrintWriter(s.getOutputStream(), true)) {
+            pOut.println(msg);
+        } catch (IOException e) {
+            System.err.println("Erro ao conectar no servidor " + porta + ". Ele está online?");
+        }
+    }
+}
