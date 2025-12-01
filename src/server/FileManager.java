@@ -16,7 +16,7 @@ public class FileManager {
         }
     }
 
-    // Método sincronizado para garantir exclusão mútua na escrita local [cite: 24, 25]
+    // Sincronização para exclusão mútua na escrita local
     public synchronized void escreverLinha(String texto) {
         try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file, true)))) {
             out.println(texto);

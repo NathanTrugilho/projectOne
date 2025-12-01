@@ -16,7 +16,6 @@ public class ServerWorker implements Runnable {
         this.portasVizinhos = vizinhos;
     }
 
-    // Função utilitária MDC
     private int calcularMDC(int a, int b) {
         while (b != 0) {
             int temp = b;
@@ -27,7 +26,7 @@ public class ServerWorker implements Runnable {
     }
 
     @Override
-    public void run() {
+    public void run() { // Thread finalizada ao término do processamento
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
@@ -38,17 +37,16 @@ public class ServerWorker implements Runnable {
             String tipo = parts[0];
 
             if (tipo.equals("LEITURA")) {
-                // [cite: 20] Leitura processada de imediato, sem dormida
+                // Leitura processada de imediato, sem dormida
                 int linhas = fileManager.contarLinhas();
-                // [cite: 14] Imprimir na PRÓPRIA TELA do servidor
+                // Imprimir na própria tela do servidor a contagem
                 System.out.println("INFO: Meu arquivo possui " + linhas + " linhas.");
-                
+
             } else if (tipo.equals("ESCRITA")) {
-                // Formato: ESCRITA;NUM1;NUM2
                 int x = Integer.parseInt(parts[1]);
                 int y = Integer.parseInt(parts[2]);
 
-                // [cite: 18] Thread deve dormir 100-200ms antes de processar
+                // Thread dorme 100-200ms antes de processar
                 try {
                     Thread.sleep(new Random().nextInt(101) + 100);
                 } catch (InterruptedException e) {
@@ -56,22 +54,23 @@ public class ServerWorker implements Runnable {
                 }
 
                 int mdc = calcularMDC(x, y);
+                // Formato obrigatório da frase no arquivo
                 String resultado = "O MDC entre " + x + " e " + y + " é " + mdc;
 
-                // Escreve no arquivo local
+                // Servidor escreve apenas em seu arquivo local
                 fileManager.escreverLinha(resultado);
                 System.out.println("Escrita Local: " + resultado);
 
-                //  REPLICAÇÃO: Envia para os vizinhos para manter consistência
+                // Mecanismo para garantir consistência entre arquivos
                 replicarParaVizinhos(x, y);
 
             } else if (tipo.equals("REPLICACAO")) {
-                // Recebido de outro servidor (não do LoadBalancer). Apenas escreve.
+                // Auxilia na manutenção da consistência dos dados
                 int x = Integer.parseInt(parts[1]);
                 int y = Integer.parseInt(parts[2]);
                 int mdc = calcularMDC(x, y);
                 String resultado = "O MDC entre " + x + " e " + y + " é " + mdc;
-                
+
                 fileManager.escreverLinha(resultado);
                 System.out.println("Replicação recebida e gravada: " + resultado);
             }
@@ -81,12 +80,10 @@ public class ServerWorker implements Runnable {
         }
     }
 
-    // Método que conecta nos outros 2 servidores e manda gravar
     private void replicarParaVizinhos(int x, int y) {
         for (int porta : portasVizinhos) {
             try (Socket s = new Socket("localhost", porta);
                  PrintWriter pOut = new PrintWriter(s.getOutputStream(), true)) {
-                // Envia comando especial de REPLICACAO para não causar loop infinito
                 pOut.println("REPLICACAO;" + x + ";" + y);
             } catch (IOException e) {
                 System.err.println("Erro ao replicar para porta " + porta);

@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.Random;
 
-public class Client implements Runnable { // Agora implementa Runnable
+public class Client implements Runnable {
     private static final String HOST = "localhost";
     private static final int PORTA_LB = 8080;
     private static final String ARQUIVO_LOG = "cliente_log.txt";
@@ -13,9 +13,9 @@ public class Client implements Runnable { // Agora implementa Runnable
     public void run() {
         Random random = new Random();
 
-        while (true) {
+        while (true) { // Loop infinito enviando requisições
             try {
-                // Envia requisições de Leitura ou Escrita
+                // Comunicação via sockets TCP
                 try (Socket socket = new Socket(HOST, PORTA_LB);
                      PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
@@ -30,17 +30,17 @@ public class Client implements Runnable { // Agora implementa Runnable
                         out.println(msg);
 
                         System.out.println("[Client] Enviou ESCRITA: " + x + ";" + y);
-                        // Log local
+                        // Salva log local dos pares enviados
                         registrarLog(x, y);
 
                     } else {
-                        // Requisição de leitura
+                        // Requisição de leitura apenas para contar linhas
                         out.println("LEITURA");
                         System.out.println("[Client] Enviou LEITURA");
                     }
                 }
 
-                // Dorme entre 20 e 50ms
+                // Dorme tempo aleatório entre 20 e 50ms após envio
                 int tempoDormida = random.nextInt(31) + 20;
                 Thread.sleep(tempoDormida);
 
@@ -50,7 +50,7 @@ public class Client implements Runnable { // Agora implementa Runnable
             }
         }
     }
-
+    // Salva o log local dos pares
     private void registrarLog(int x, int y) {
         try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(ARQUIVO_LOG, true)))) {
             out.println("Enviado par: " + x + ", " + y);
