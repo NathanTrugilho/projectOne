@@ -8,9 +8,9 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("=== INICIANDO SISTEMA DISTRIBUÍDO ===");
+        System.out.println("Bem Vindo a Calculadora de MDC");
 
-        // 1. Iniciar os 3 Servidores de Aplicação (9001, 9002, 9003)
+        // Inicia os 3 Servidores de Aplicação (9001, 9002, 9003)
         // Definimos as portas e vizinhos manualmente aqui
         int[] portas = {9001, 9002, 9003};
 

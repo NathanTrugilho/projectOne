@@ -50,6 +50,8 @@ public class LoadBalancer implements Runnable {
 
     private void enviarParaServidor(int porta, String msg) {
         try (Socket s = new Socket("localhost", porta);
+            // O pOut escreve a mensagem para o servidor na porta especificada aleatoriamente
+            // Essa biblioteca fecha o PrintWriter automaticamente
              PrintWriter pOut = new PrintWriter(s.getOutputStream(), true)) {
             pOut.println(msg);
         } catch (IOException e) {
