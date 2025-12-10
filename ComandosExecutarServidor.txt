@@ -1,0 +1,8 @@
+Compilar no projectOne
+javac runers/*.java server/*.java client/*.java loadbalancer/*.java
+Runners dentro da pasta runners
+java runers.RunServer 9001 9002 9003
+java runers.RunServer 9002 9001 9003
+java runers.RunServer 9003 9001 9002
+java runers.RunLoadBalancer
+java runers.RunClient

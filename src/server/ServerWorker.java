@@ -9,6 +9,7 @@ public class ServerWorker implements Runnable {
     private Socket socket;
     private FileManager fileManager;
     private List<Integer> portasVizinhos;
+    private static final int PORTA_LB = 8080; // Para enviar o ACK
 
     public ServerWorker(Socket socket, FileManager fileManager, List<Integer> vizinhos) {
         this.socket = socket;
@@ -26,7 +27,7 @@ public class ServerWorker implements Runnable {
     }
 
     @Override
-    public void run() { // Thread finalizada ao término do processamento
+    public void run() {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
@@ -37,42 +38,42 @@ public class ServerWorker implements Runnable {
             String tipo = parts[0];
 
             if (tipo.equals("LEITURA")) {
-                // Leitura processada de imediato, sem dormida
+                // Processamento imediato
                 int linhas = fileManager.contarLinhas();
-                // Imprimir na própria tela do servidor a contagem
                 System.out.println("INFO: Meu arquivo possui " + linhas + " linhas.");
 
             } else if (tipo.equals("ESCRITA")) {
                 int x = Integer.parseInt(parts[1]);
                 int y = Integer.parseInt(parts[2]);
 
-                // Thread dorme 100-200ms antes de processar
+                // 1. Dormir (Regra do enunciado)
                 try {
-                    Thread.sleep(new Random().nextInt(101) + 100);
+                    Thread.sleep(new Random().nextInt(101) + 100); // 100 a 200ms
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 
+                // 2. Calcular e Escrever Local
                 int mdc = calcularMDC(x, y);
-                // Formato obrigatório da frase no arquivo
                 String resultado = "O MDC entre " + x + " e " + y + " é " + mdc;
-
-                // Servidor escreve apenas em seu arquivo local
                 fileManager.escreverLinha(resultado);
                 System.out.println("Escrita Local: " + resultado);
 
-                // Mecanismo para garantir consistência entre arquivos
+                // 3. Replicar para garantir consistência
                 replicarParaVizinhos(x, y);
 
+                // 4. IMPORTANTE: Notificar LoadBalancer que terminou (Libera a fila)
+                notificarLoadBalancerConclusao();
+
             } else if (tipo.equals("REPLICACAO")) {
-                // Auxilia na manutenção da consistência dos dados
+                // Apenas escreve o que veio do vizinho (Não notifica LB, pois não é o líder)
                 int x = Integer.parseInt(parts[1]);
                 int y = Integer.parseInt(parts[2]);
                 int mdc = calcularMDC(x, y);
                 String resultado = "O MDC entre " + x + " e " + y + " é " + mdc;
 
                 fileManager.escreverLinha(resultado);
-                System.out.println("Replicação recebida e gravada: " + resultado);
+                System.out.println("Replicação recebida: " + resultado);
             }
 
         } catch (IOException e) {
@@ -88,6 +89,15 @@ public class ServerWorker implements Runnable {
             } catch (IOException e) {
                 System.err.println("Erro ao replicar para porta " + porta);
             }
+        }
+    }
+
+    private void notificarLoadBalancerConclusao() {
+        try (Socket s = new Socket("localhost", PORTA_LB);
+             PrintWriter pOut = new PrintWriter(s.getOutputStream(), true)) {
+            pOut.println("ACK_ESCRITA");
+        } catch (IOException e) {
+            System.err.println("Erro ao notificar LoadBalancer (ACK).");
         }
     }
 }
