@@ -46,23 +46,23 @@ public class ServerWorker implements Runnable {
                 int x = Integer.parseInt(parts[1]);
                 int y = Integer.parseInt(parts[2]);
 
-                // 1. Dormir (Regra do enunciado)
+                // Dormir
                 try {
                     Thread.sleep(new Random().nextInt(101) + 100); // 100 a 200ms
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
 
-                // 2. Calcular e Escrever Local
+                // Calcular e Escrever Local
                 int mdc = calcularMDC(x, y);
                 String resultado = "O MDC entre " + x + " e " + y + " é " + mdc;
                 fileManager.escreverLinha(resultado);
                 System.out.println("Escrita Local: " + resultado);
 
-                // 3. Replicar para garantir consistência
+                // Replicar para garantir consistência
                 replicarParaVizinhos(x, y);
 
-                // 4. IMPORTANTE: Notificar LoadBalancer que terminou (Libera a fila)
+                // Notificar LoadBalancer que terminou (Libera a fila)
                 notificarLoadBalancerConclusao();
 
             } else if (tipo.equals("REPLICACAO")) {
