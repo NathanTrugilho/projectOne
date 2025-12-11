@@ -45,7 +45,7 @@ public class ServerWorker implements Runnable {
                 int x = Integer.parseInt(parts[1]);
                 int y = Integer.parseInt(parts[2]);
 
-                // 1. Fase de Processamento (Paralelo - Sem Lock)
+                // Fase de Processamento (Paralelo - Sem Lock)
                 // Simula o tempo de cálculo/sleep conforme especificado
                 try {
                     System.out.println("Processando MDC de " + x + " e " + y + " (Sleep)...");
@@ -57,7 +57,7 @@ public class ServerWorker implements Runnable {
                 int mdc = calcularMDC(x, y);
                 String resultado = "O MDC entre " + x + " e " + y + " é " + mdc;
 
-                // 2. Fase de Escrita (Crítica - Precisa de Lock)
+                // Fase de Escrita (Crítica - Precisa de Lock)
                 // Conecta ao Load Balancer e pede permissão
                 try (Socket lockSocket = new Socket("localhost", PORTA_LB);
                      PrintWriter lockOut = new PrintWriter(lockSocket.getOutputStream(), true);
@@ -73,15 +73,15 @@ public class ServerWorker implements Runnable {
                     if (response != null && response.equals("GRANTED")) {
                         System.out.println("LOCK adquirido! Iniciando protocolo de escrita...");
                         
-                        // A) Escrita Local
+                        // Escrita Local
                         fileManager.escreverLinha(resultado);
                         System.out.println("Escrita Local: OK.");
 
-                        // B) Replicação Síncrona (Garante consistência antes de liberar)
+                        // Replicação Síncrona (Garante consistência antes de liberar)
                         // Só avança se os vizinhos confirmarem
                         replicarParaVizinhosComConfirmacao(x, y);
                         
-                        // C) Libera o Lock
+                        // Libera o Lock
                         lockOut.println("RELEASE_LOCK");
                         System.out.println("Processo concluído. LOCK liberado.");
                     }

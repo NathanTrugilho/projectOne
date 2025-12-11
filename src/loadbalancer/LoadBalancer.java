@@ -27,6 +27,8 @@ public class LoadBalancer implements Runnable {
             while (true) {
                 // Aceita conexão e delega para uma thread (não bloqueia novos clientes)
                 Socket clientSocket = serverSocket.accept();
+                // O handleClient é instanciado em nova thread para cada cliente
+                // Assim, múltiplos clientes podem ser atendidos simultaneamente
                 new Thread(() -> handleClient(clientSocket)).start();
             }
         } catch (IOException e) {

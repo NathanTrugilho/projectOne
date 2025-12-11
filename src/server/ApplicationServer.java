@@ -4,6 +4,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 
+// Ele apenas inicia o servidor e aceita conexões
+// E delegaa para ServerWorker para processar cada requisição
 public class ApplicationServer {
     private int minhaPorta;
     private List<Integer> portasVizinhos;

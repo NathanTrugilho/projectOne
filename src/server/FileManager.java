@@ -17,6 +17,7 @@ public class FileManager {
     }
 
     // Sincronização para exclusão mútua na escrita local
+    // synchronized impede de dois arquivos serem escritos ao mesmo tempo
     public synchronized void escreverLinha(String texto) {
         try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file, true)))) {
             out.println(texto);
